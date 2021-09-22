@@ -40,7 +40,10 @@ void task1() {
     cv::Mat unicornInLargeCastle = addBackgroundInsteadOfBlackPixelsLargeBackground(imgUnicorn.clone(), largeCastle.clone()); // TODO реализуйте функцию так, чтобы нарисовался объект ровно по центру на данном фоне, при этом черные пиксели объекта не должны быть нарисованы
     std::string filename3 = resultsDir + "04_unicorn_large_castle.jpg"; // удобно в начале файла писать число, чтобы файлы были в том порядке в котором мы их создали
     cv::imwrite(filename3, unicornInLargeCastle);// TODO сохраните результат - "04_unicorn_large_castle.jpg"
-
+    // TODO считайте с диска картинку с большим замком - castle_large.png
+    cv::Mat un = bg(imgUnicorn.clone(), largeCastle.clone(), (rand() % static_cast<int>(100 + 1))); // TODO реализуйте функцию так, чтобы нарисовался объект ровно по центру на данном фоне, при этом черные пиксели объекта не должны быть нарисованы
+    std::string filename4 = resultsDir + "05_unicorns_otake.jpg"; // удобно в начале файла писать число, чтобы файлы были в том порядке в котором мы их создали
+    cv::imwrite(filename4, un);
     // TODO сделайте то же самое, но теперь пусть единорог рисуется N раз (случайно выбранная переменная от 0 до 100)
     // функцию вам придется объявить самостоятельно, включая:
     // 1) придумывание ее имени

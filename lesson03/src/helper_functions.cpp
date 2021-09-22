@@ -70,6 +70,40 @@ cv::Mat addBackgroundInsteadOfBlackPixels(cv::Mat object, cv::Mat background) {
 }
 
 cv::Mat addBackgroundInsteadOfBlackPixelsLargeBackground(cv::Mat object, cv::Mat largeBackground) {
+    rassert(object.cols < largeBackground.cols, "fgjeorigoiue");
+    rassert(object.rows < largeBackground.rows, "fgjtrrtgfeorigoiue");
+    int y  = (largeBackground.cols - object.cols)/2;
+    int x  = (largeBackground.rows - object.rows)/2;
+    for (unsigned char i = 0; i < object.cols; ++i) {
+        for (unsigned char e = 0; e < object.rows; ++e) {
+            cv::Vec3b c = object.at<cv::Vec3b>(e, i);
+            if (!((c[0] ==(unsigned char) 0) && (c[1] == (unsigned char)0) && (c[2] == (unsigned char)0))) {
+                largeBackground.at<cv::Vec3b>(e + x,i + y) = object.at<cv::Vec3b>(e, i);
+            }
+        }
+    }
+    // теперь вам гарантируется что largeBackground гораздо больше - добавьте проверок этого инварианта (rassert-ов)
+
+    // TODO реализуйте функцию так, чтобы нарисовался объект ровно по центру на данном фоне, при этом черные пиксели объекта не должны быть нарисованы
+
+    return largeBackground;
+}
+
+cv::Mat bg(cv::Mat object, cv::Mat largeBackground, int n) {
+    rassert(object.cols < largeBackground.cols, "fgjeorigoiue");
+    rassert(object.rows < largeBackground.rows, "fgjtrrtgfeorigoiue");
+    for (int o = 0; o < n; ++o) {
+        int y  = 0 + (rand() % static_cast<int>(largeBackground.cols - 101 - 0 + 1));
+        int x  =  0 + (rand() % static_cast<int>(largeBackground.rows - 101 - 0 + 1));
+        for (unsigned char i = 0; i < object.cols; ++i) {
+            for (unsigned char e = 0; e < object.rows; ++e) {
+                cv::Vec3b c = object.at<cv::Vec3b>(e, i);
+                if (!((c[0] ==(unsigned char) 0) && (c[1] == (unsigned char)0) && (c[2] == (unsigned char)0))) {
+                    largeBackground.at<cv::Vec3b>(e + x,i + y) = object.at<cv::Vec3b>(e, i);
+                }
+            }
+        }
+    }
     // теперь вам гарантируется что largeBackground гораздо больше - добавьте проверок этого инварианта (rassert-ов)
 
     // TODO реализуйте функцию так, чтобы нарисовался объект ровно по центру на данном фоне, при этом черные пиксели объекта не должны быть нарисованы
