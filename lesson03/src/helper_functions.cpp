@@ -110,3 +110,6 @@ cv::Mat bg(cv::Mat object, cv::Mat largeBackground, int n) {
 
     return largeBackground;
 }
+cv::Mat kl(cv::Mat obj, cv::Mat lbg) {
+
+}

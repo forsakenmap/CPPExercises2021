@@ -11,3 +11,5 @@ cv::Mat addBackgroundInsteadOfBlackPixels(cv::Mat object, cv::Mat background);
 cv::Mat addBackgroundInsteadOfBlackPixelsLargeBackground(cv::Mat object, cv::Mat largeBackground);
 
 cv::Mat bg(cv::Mat object, cv::Mat largeBackground, int n);
+
+cv::Mat kl(cv::Mat obj, cv::Mat lbg);
