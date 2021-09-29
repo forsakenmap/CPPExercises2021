@@ -2,6 +2,39 @@
 
 #include <libutils/rasserts.h>
 
+cv::Mat blc(cv::Mat image) {
+    int b = rand()*255/32767;
+    int r = rand()*255/32767;
+    int g = rand()*255/32767;
+    for (unsigned char i = 0; i < image.cols; ++i) {
+        for (unsigned char e = 0; e < image.rows; ++e) {
+            cv::Vec3b c = image.at<cv::Vec3b>(e, i);
+            if((c[0] ==(unsigned char) 0) && (c[1] == (unsigned char)0) && (c[2] == (unsigned char)0)) {
+
+                image.at<cv::Vec3b>(e, i) = cv::Vec3b(b, r, g);
+            }
+        }
+    }
+    // ниже приведен пример как узнать цвет отдельного пикселя - состоящий из тройки чисел BGR (Blue Green Red)
+    // чем больше значение одного из трех чисел - тем насыщеннее его оттенок
+    // всего их диапазон значений - от 0 до 255 включительно
+    // т.е. один байт, поэтому мы используем ниже тип unsigned char - целое однобайтовое неотрицательное число
+    //  cv::Vec3b color = image.at<cv::Vec3b>(13, 5); // взяли и узнали что за цвет в пикселе в 14-ом ряду (т.к. индексация с нуля) и 6-ой колонке
+    //  unsigned char blue = color[0]; // если это число равно 255 - в пикселе много синего, если равно 0 - в пикселе нет синего
+    //  unsigned char green = color[1];
+    //  unsigned char red = color[2];
+
+    // как получить белый цвет? как получить черный цвет? как получить желтый цвет?
+    // поэкспериментируйте! например можете всю картинку заполнить каким-то одним цветом
+
+    // пример как заменить цвет по тем же координатам
+    // red = 255;
+    // запустите эту версию функции и посмотрите на получившуюся картинку - lesson03/resultsData/01_blue_unicorn.jpg
+    // какой пиксель изменился? почему он не чисто красный?
+    // image.at<cv::Vec3b>(13, 5) = cv::Vec3b(blue, green, red);
+
+    return image;
+}
 
 cv::Mat makeAllBlackPixelsBlue(cv::Mat image) {
     // TODO реализуйте функцию которая каждый черный пиксель картинки сделает синим
@@ -110,6 +143,6 @@ cv::Mat bg(cv::Mat object, cv::Mat largeBackground, int n) {
 
     return largeBackground;
 }
-cv::Mat kl(cv::Mat obj, cv::Mat lbg) {
+//cv::Mat kl(cv::Mat obj, cv::Mat lbg) {
 
-}
+//}

@@ -4,6 +4,8 @@
 
 cv::Mat makeAllBlackPixelsBlue(cv::Mat image);
 
+cv::Mat blc(cv::Mat image);
+
 cv::Mat invertImageColors(cv::Mat image);
 
 cv::Mat addBackgroundInsteadOfBlackPixels(cv::Mat object, cv::Mat background);
