@@ -5,7 +5,9 @@
 #include "helper_functions.h"
 
 #include <opencv2/highgui.hpp> // подключили часть библиотеки OpenCV, теперь мы можем читать и сохранять картинки
-
+std::vector<int> objx;
+std::vector<int> objy;
+bool inv = false;
 void task1() {
     cv::Mat imgUnicorn = cv::imread("lesson03/data/unicorn.png");  // загружаем картинку с единорогом
     rassert(!imgUnicorn.empty(), 3428374817241); // проверяем что картинка загрузилась (что она не пустая)
@@ -88,6 +90,10 @@ void onMouseClick(int event, int x, int y, int flags, void *pointerToMyVideoCont
 
     if (event == cv::EVENT_LBUTTONDOWN) { // если нажата левая кнопка мыши
         std::cout << "Left click at x=" << x << ", y=" << y << std::endl;
+        objx.push_back(x);
+        objy.push_back(y);
+    } else if (event == cv::EVENT_RBUTTONDOWN) {
+        inv = !inv;
     }
 }
 
@@ -108,17 +114,27 @@ void task3() {
     // content.frame - доступ к тому кадру что был только что отображен на экране
     // content.lastClickX - переменная которая вам тоже наверняка пригодится
     // вы можете добавить своих переменных в структурку выше (считайте что это описание объекта из ООП, т.к. почти полноценный класс)
+    bool b =true;
     // просто перейдите к ее объявлению - удерживая Ctrl сделайте клик левой кнопкой мыши по MyVideoContent - и вас телепортирует к ее определению
-    while (cv::waitKey(10) != 32) {
-        while (video.isOpened()) { // пока видео не закрылось - бежим по нему
+        while (b) { // пока видео не закрылось - бежим по нему
             bool isSuccess = video.read(content.frame); // считываем из видео очередной кадр
             rassert(isSuccess, 348792347819); // проверяем что считывание прошло успешно
             rassert(!content.frame.empty(), 3452314124643); // проверяем что кадр не пустой
-
-            cv::imshow("video", content.frame); // покаызваем очередной кадр в окошке
+            cv::Mat im = content.frame.clone();
+            if(inv){
+                im = invertImageColors(im.clone());
+            }
+            im = tored(objx,objy,im.clone());
+            cv::imshow("video", im); // покаызваем очередной кадр в окошке
             cv::setMouseCallback("video", onMouseClick, &content); // делаем так чтобы функция выше (onMouseClick) получала оповещение при каждом клике мышкой
-
-          //  int key = cv::waitKey(10);
+           // std::cout << cv::waitKey(1);
+            if(cv::waitKey(1) == 32) {
+                b =false;
+            }
+            if(cv::waitKey(1) == 27) {
+                b =false;
+            }
+            cv::waitKey(20);
             // TODO добавьте завершение программы в случае если нажат пробел
             // TODO добавьте завершение программы в случае если нажат Escape (придумайте как нагуглить)
 
@@ -127,7 +143,7 @@ void task3() {
 
             // TODO сделайте по правому клику мышки переключение в режим "цвета каждого кадра инвертированы" (можете просто воспользоваться функцией invertImageColors)
         }
-    }
+
 }
 
 void task4() {
@@ -140,14 +156,51 @@ void task4() {
     // TODO подумайте, а как бы отмаскировать фон целиком несмотря на то что он разноцветный?
     // а как бы вы справились с тем чтобы из фотографии с единорогом и фоном удалить фон зная как выглядит фон?
     // а может сделать тот же трюк с вебкой - выйти из вебки в момент запуска программы, и первый кадр использовать как кадр-эталон с фоном который надо удалять (делать прозрачным)
+    cv::VideoCapture video(0);
+    // если у вас нет вебкамеры - подключите ваш телефон к компьютеру как вебкамеру - это должно быть не сложно (загуглите)
+    // альтернативно если у вас совсем нет вебки - то попробуйте запустить с видеофайла, но у меня не заработало - из-за "there is API version mismath: plugin API level (0) != OpenCV API level (1)"
+    // скачайте какое-нибудь видео с https://www.videezy.com/free-video/chroma-key
+    // например https://www.videezy.com/elements-and-effects/5594-interactive-hand-gesture-sliding-finger-studio-green-screen
+    // если вы увидите кучу ошибок в консоли навроде "DynamicLib::libraryLoad load opencv_videoio_ffmpeg451_64.dll => FAILED", то скопируйте файл C:\...\opencv\build\x64\vc14\bin\opencv_videoio_ffmpeg451_64.dll в папку с проектом
+    // и укажите путь к этому видео тут:
+    //    cv::VideoCapture video("lesson03/data/Spin_1.mp4");
+    rassert(video.isOpened(), 3423948392481); // проверяем что видео получилось открыть
+    cv::Mat largeCastle =cv::imread("lesson03/data/castle_large.jpg");
+    MyVideoContent content; // здесь мы будем хранить всякие полезности - например последний видео кадр, координаты последнего клика и т.п.
+    // content.frame - доступ к тому кадру что был только что отображен на экране
+    // content.lastClickX - переменная которая вам тоже наверняка пригодится
+    // вы можете добавить своих переменных в структурку выше (считайте что это описание объекта из ООП, т.к. почти полноценный класс)
+    bool b =true;
+    // просто перейдите к ее объявлению - удерживая Ctrl сделайте клик левой кнопкой мыши по MyVideoContent - и вас телепортирует к ее определению
+    while (b) { // пока видео не закрылось - бежим по нему
+        bool isSuccess = video.read(content.frame); // считываем из видео очередной кадр
+        rassert(isSuccess, 348792347819); // проверяем что считывание прошло успешно
+        rassert(!content.frame.empty(), 3452314124643); // проверяем что кадр не пустой
+        cv::Mat im = content.frame.clone();
+        if(inv){
+            im = invertImageColors(im.clone());
+        }
+        im = tored(objx,objy,im.clone());
+       // im = addbgred(im.clone(), largeCastle.clone());
+        cv::imshow("video", im); // покаызваем очередной кадр в окошке
+        cv::setMouseCallback("video", onMouseClick, &content); // делаем так чтобы функция выше (onMouseClick) получала оповещение при каждом клике мышкой
+        // std::cout << cv::waitKey(1);
+        if(cv::waitKey(1) == 32) {
+            b =false;
+        }
+        if(cv::waitKey(1) == 27) {
+            b =false;
+        }
+        cv::waitKey(20);
+    }
 }
 
 int main() {
     try {
      //   task1();
       //  task2();
-      task3();
-//        task4();
+   //   task3();
+      task4();
         return 0;
     } catch (const std::exception &e) {
         std::cout << "Exception! " << e.what() << std::endl;

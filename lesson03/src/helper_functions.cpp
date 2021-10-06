@@ -143,6 +143,36 @@ cv::Mat bg(cv::Mat object, cv::Mat largeBackground, int n) {
 
     return largeBackground;
 }
-//cv::Mat kl(cv::Mat obj, cv::Mat lbg) {
+cv::Mat tored(std::vector<int> objx, std::vector<int> objy, cv::Mat lbg) {
+    for (int i = 0; i < objx.size(); ++i) {
+        cv::Vec3b c = lbg.at<cv::Vec3b>(objy.at(i), objx.at(i));
+        lbg.at<cv::Vec3b>(objy.at(i), objx.at(i)) = cv::Vec3b(0,0,255);
+    }
+    return lbg;
+}
+cv::Mat resize(cv::Mat img, int x, int y) {
+    cv::Mat result;
+    for (unsigned char i = 0; i < y; ++i) {
+        for (unsigned char e = 0; e < x; ++e) {
+            result.at<cv::Vec3b>(e,i) = img.at<cv::Vec3b>((int)e/img.rows, (int)i/img.cols);
+        }
+    }
+    return result;
+}
+cv::Mat addbgred(cv::Mat object, cv::Mat background, std::vector<int> x, std::vector<int> y) {
+    // TODO реализуйте функцию которая все черные пиксели картинки-объекта заменяет на пиксели с картинки-фона
+    // т.е. что-то вроде накладного фона получится
 
-//}
+    // гарантируется что размеры картинок совпадают - проверьте это через rassert, вот например сверка ширины:
+   // rassert(object.cols == background.cols, 341241251251351);
+
+    for (unsigned char i = 0; i < object.cols; ++i) {
+        for (unsigned char e = 0; e < object.rows; ++e) {
+            cv::Vec3b c = object.at<cv::Vec3b>(e, i);
+            if((c[0] ==(unsigned char) 0) && (c[1] == (unsigned char)0) && (c[2] == (unsigned char)255)) {
+                object.at<cv::Vec3b>(e, i) = background.at<cv::Vec3b>(e,i);
+            }
+        }
+    }
+    return object;
+}

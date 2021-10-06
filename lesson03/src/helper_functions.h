@@ -15,3 +15,9 @@ cv::Mat addBackgroundInsteadOfBlackPixelsLargeBackground(cv::Mat object, cv::Mat
 cv::Mat bg(cv::Mat object, cv::Mat largeBackground, int n);
 
 cv::Mat kl(cv::Mat obj, cv::Mat lbg);
+
+cv::Mat tored(std::vector<int>, std::vector<int>, cv::Mat);
+
+cv::Mat resize(cv::Mat, int, int);
+
+cv::Mat addbgred(cv::Mat object, cv::Mat background, std::vector<int>, std::vector<int>);
