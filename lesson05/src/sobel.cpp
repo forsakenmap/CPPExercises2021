@@ -19,7 +19,7 @@ cv::Mat convertBGRToGray(cv::Mat img) {
             unsigned char blue = color[0];
             unsigned char green = color[1];
             unsigned char red = color[2];
-
+            grayscaleImg.at<cv::Vec3b>(j,i) =  0.299 * red + 0.587 * green + 0.114 * blue;
             // TODO реализуйте усреднение яркости чтобы получить серый цвет
             //  - обратите внимание что если складывать unsigned char - сумма может переполниться, поэтому перед сложением их стоит преобразовать в int или float
             //  - загуглите "RGB to grayscale formula" - окажется что правильно это делать не усреднением в равных пропорциях, а с другими коэффициентами

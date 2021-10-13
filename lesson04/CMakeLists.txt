@@ -12,6 +12,8 @@ find_package(OpenCV 4.5.1 REQUIRED)
 set(SOURCES
         src/disjoint_set.cpp
         src/disjoint_set.h
+        src/helper_functions.cpp
+        src/helper_functions.h
         src/morphology.cpp
         src/morphology.h)
 
