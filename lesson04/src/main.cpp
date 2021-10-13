@@ -55,8 +55,8 @@ void backgroundMagickStreaming() {
 
 int main() {
     try {
-        //        testingMyDisjointSets();
-        backgroundMagickStreaming();
+               testingMyDisjointSets();
+       // backgroundMagickStreaming();
         return 0;
     } catch (const std::exception &e) {
         std::cout << "Exception! " << e.what() << std::endl;

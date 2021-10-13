@@ -197,9 +197,6 @@ cv::Mat clearWithDSU(cv::Mat mask, char v, int min_size){
     }
     return mask;
 }
-
-
-//Фон - 1, отсутствие - 0
 cv::Mat getBackgroundMask(cv::Mat object, cv::Vec3b color, double dis){
     cv::Mat res(object.rows, object.cols, CV_8UC1, cv::Scalar(0));
     for(int i = 0; i < object.rows; i++) {
