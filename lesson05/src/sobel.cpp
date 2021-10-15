@@ -8,10 +8,10 @@ cv::Mat convertBGRToGray(cv::Mat img) {
     int width = img.cols;
     cv::Mat grayscaleImg(height, width, CV_32FC1); // в этой картинке мы сохраним черно-белую версию (оттенки серого)
     // давайте поймем что означает тип картинки CV_32FC1:
-    //                                          CV = Computer Vision (библиотека в целом называетсяOpenCV)
-    //                                             32F = 32-битное floating число, т.е. вещественное число типа float
-    //                                                С1 = 1 channel = один канал - вещественное число описывающее насколько этот пиксель яркий:
-    //                                                                                                            (0.0 - черный, 255.0 = белый)
+    // CV = Computer Vision (библиотека в целом называетсяOpenCV)
+    // 32F = 32-битное floating число, т.е. вещественное число типа float
+    // С1 = 1 channel = один канал - вещественное число описывающее насколько этот пиксель яркий:
+    // (0.0 - черный, 255.0 = белый)
 
     for (int j = 0; j < height; ++j) {
         for (int i = 0; i < width; ++i) {
@@ -19,11 +19,14 @@ cv::Mat convertBGRToGray(cv::Mat img) {
             unsigned char blue = color[0];
             unsigned char green = color[1];
             unsigned char red = color[2];
+            cv::Vec3b c = img.at<cv::Vec3b>(j, i);
+            int r = c[2];
+            int g = c[1];
+            int b = c[0];
             // TODO реализуйте усреднение яркости чтобы получить серый цвет
             //  - обратите внимание что если складывать unsigned char - сумма может переполниться, поэтому перед сложением их стоит преобразовать в int или float
             //  - загуглите "RGB to grayscale formula" - окажется что правильно это делать не усреднением в равных пропорциях, а с другими коэффициентами
-            float grayIntensity = 0.299 * red + 0.587 * green + 0.114 * blue;
-
+            float grayIntensity = 0.299*r+ 0.587*g+ 0.114*b;
             grayscaleImg.at<float>(j, i) = grayIntensity;
         }
     }
@@ -75,8 +78,8 @@ cv::Mat sobelDXY(cv::Mat img) {
             for (int dj = -1; dj <= 1; ++dj) {
                 for (int di = -1; di <= 1; ++di) {
                     float intensity = img.at<float>(j + dj, i + di); // берем соседний пиксель из окрестности
-                    dxSum += dxSobelKoef[1 + dj][1 + di] * intensity;
-                    dySum += dySobelKoef[1 + dj][1 + di] * intensity;// добавляем его яркость в производную с учетом веса из ядра Собеля
+                    dxSum += dxSobelKoef[1 + dj][1 + di] * intensity; // добавляем его яркость в производную с учетом веса из ядра Собеля
+                    dySum += dySobelKoef[1 + dj][1 + di] * intensity;
                 }
             }
 
@@ -107,12 +110,40 @@ cv::Mat convertDXYToDX(cv::Mat img) {
 
 cv::Mat convertDXYToDY(cv::Mat img) {
     // TODO
-    cv::Mat dyImg;
+    rassert(img.type() == CV_32FC2,
+            238129037129092); // сверяем что в картинке два канала и в каждом - вещественное число
+    int width = img.cols;
+    int height = img.rows;
+    cv::Mat dyImg(height, width, CV_32FC1); // создаем одноканальную картинку состоящую из 32-битных вещественных чисел
+    for (int j = 0; j < height; ++j) {
+        for (int i = 0; i < width; ++i) {
+            cv::Vec2f dxy = img.at<cv::Vec2f>(j, i);
+
+            float y = std::abs(dxy[1]); // взяли абсолютное значение производной по оси x
+
+            dyImg.at<float>(j, i) = y;
+        }
+    }
     return dyImg;
 }
 
 cv::Mat convertDXYToGradientLength(cv::Mat img) {
     // TODO реализуйте функцию которая считает силу градиента в каждом пикселе
+    rassert(img.type() == CV_32FC2,
+            238129037129092); // сверяем что в картинке два канала и в каждом - вещественное число
+    int width = img.cols;
+    int height = img.rows;
+    cv::Mat dyImg(height, width, CV_32FC1); // создаем одноканальную картинку состоящую из 32-битных вещественных чисел
+    for (int j = 0; j < height; ++j) {
+        for (int i = 0; i < width; ++i) {
+            cv::Vec2f dxy = img.at<cv::Vec2f>(j, i);
+
+            float y = sqrt(std::abs(dxy[1])*std::abs(dxy[1]) + std::abs(dxy[0])*std::abs(dxy[0])); // взяли абсолютное значение производной по оси x
+
+            dyImg.at<float>(j, i) = y;
+        }
+    }
+    return dyImg;
     // точнее - его длину, ведь градиент - это вектор (двухмерный, ведь у него две компоненты), а у вектора всегда есть длина - sqrt(x^2+y^2)
     // TODO и удостоверьтесь что результат выглядит так как вы ожидаете, если нет - спросите меня
     return img;
