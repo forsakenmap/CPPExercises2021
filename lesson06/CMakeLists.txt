@@ -11,7 +11,7 @@ find_package(OpenCV 4.5.1 REQUIRED)
 
 set(SOURCES
         src/blur.cpp
-        src/blur.h)
+        src/blur.h src/sobel.h src/sobel.cpp)
 
 set(LIBRARIES
         libutils

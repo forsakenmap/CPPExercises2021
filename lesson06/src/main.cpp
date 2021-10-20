@@ -1,10 +1,14 @@
 #include <filesystem>
 #include <iostream>
 #include <libutils/rasserts.h>
-
+#include "sobel.h"
 #include "blur.h" // TODO реализуйте функцию блюра с произвольной силой размытия в файле blur.cpp
 
 void testSomeBlur() {
+    std::string name = "1";
+    cv::Mat img = cv::imread("lesson05/data/" + name + ".jpg");
+    img = blur(img.clone(),1);
+    cv::imwrite("lesson05/resultsData/" + name + "_1.jpg", img);
     // TODO выберите любую картинку и любую силу сглаживания - проверьте что результат - чуть размытая картинка
     // Входные картинки для тестирования возьмите из предыдущего урока (т.е. по пути lesson05/data/*).
     // Результирующие картинки сохарняйте в эту папку (т.е. по пути lesson06/resultsData/*).
