@@ -139,8 +139,11 @@ cv::Mat convertDXYToGradientLength(cv::Mat img) {
             cv::Vec2f dxy = img.at<cv::Vec2f>(j, i);
 
             float y = sqrt(std::abs(dxy[1])*std::abs(dxy[1]) + std::abs(dxy[0])*std::abs(dxy[0])); // взяли абсолютное значение производной по оси x
-
-            dyImg.at<float>(j, i) = y;
+            if(y > 150) {
+                dyImg.at<float>(j, i) = y;
+            } else {
+                dyImg.at<float>(j, i) = 0;
+            }
         }
     }
     return dyImg;
