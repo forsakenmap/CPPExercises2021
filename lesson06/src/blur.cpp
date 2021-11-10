@@ -1,5 +1,4 @@
 #include "blur.h"
-#define _USE_MATH_DEFINES
 #include <math.h>
 
 cv::Mat blur(cv::Mat img, double s, int r) {
@@ -29,5 +28,5 @@ cv::Mat blur(cv::Mat img, double s, int r) {
 }
 
 double G(int dx, int dy, double s){
-    return exp(-(dx*dx+dy*dy)/(2*s*s))/(2*M_PI*s*s);
+    return exp(-(dx*dx+dy*dy)/(2*s*s))/(2*3.1415*s*s);
 }
