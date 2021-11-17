@@ -56,10 +56,21 @@ void test(std::string name) {
         }
     }
     // заменим каждый пиксель с яркости X на яркость X*255.0f/max_accumulated (т.е. уменьшим диапазон значений)
-    cv::imwrite("lesson08/resultsData/" + name + "_2_hough_normalized.png", hough * 255.0f / max_accumulated);
 
+
+    cv::Mat bHough;
+    int blurX = 2;
+    int blurY = blurX * hough.rows / hough.cols;
+    if (blurY % 2 == 0) {
+        blurY = blurY + 1;
+    }
+    if (blurY < blurX) {
+        blurY = blurX;
+    }
+    cv::blur(hough, bHough, cv::Size(blurX, blurY));
+    hough = bHough;
     // TODO здесь может быть полезно сгладить пространство Хафа, см. комментарии на сайте - https://www.polarnick.com/blogs/239/2021/school239_11_2021_2022/2021/11/09/lesson9-hough2-interpolation-extremum-detection.html
-
+    cv::imwrite("lesson08/resultsData/" + name + "_2_hough_normalized.png", hough * 255.0f / max_accumulated);
     // TODO реализуйте функцию которая ищет и перечисляет локальные экстремумы - findLocalExtremums(...)
     std::vector<PolarLineExtremum> lines = findLocalExtremums(hough);
 
@@ -77,6 +88,8 @@ void test(std::string name) {
 
 int main() {
     try {
+        test("081");
+        test("1");
         test("line01");
 
         test("line02");

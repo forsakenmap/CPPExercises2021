@@ -25,8 +25,8 @@ cv::Mat buildHough(cv::Mat sobel) {// единственный аргумент 
     int max_theta = 360;
 
     // решаем какое максимальное значение у параметра r в нашем пространстве прямых:
-    int max_r = 100; //  замените это число так как вам кажется правильным (отталкиваясь от разрешения картинки - ее ширины и высоты)
-
+    int max_r = sqrt(sobel.cols * sobel.cols + sobel.rows * sobel.rows) / 3 ; //  замените это число так как вам кажется правильным (отталкиваясь от разрешения картинки - ее ширины и высоты)
+    std::cout << "max_r  = " << max_r << std::endl;
     // создаем картинку-аккумулятор, в которой мы будем накапливать суммарные голоса за прямые
     // так же известна как пространство Хафа
     cv::Mat accumulator(max_r, max_theta, CV_32FC1,
@@ -107,8 +107,8 @@ std::vector<PolarLineExtremum> findLocalExtremums(cv::Mat houghSpace) {
                             (houghSpace.at<float>(r, theta) > houghSpace.at<float>(r, theta + 1))) {
                             PolarLineExtremum line(theta, r, houghSpace.at<float>(r, theta));
                             result.push_back(line);
-                            std::cout << "Test Line #" << i << " theta=" << line.theta << " r=" << line.r << " votes=" << line.votes << std::endl;
                             i++;
+                            std::cout << "Test Line #" << i << " theta=" << line.theta << " r=" << line.r << " votes=" << line.votes << std::endl;
                         }
                     }
                 }
@@ -116,11 +116,11 @@ std::vector<PolarLineExtremum> findLocalExtremums(cv::Mat houghSpace) {
 
         }
     }
-    std::cout << "Total lines = " + (i + 1) << std::endl;
+    std::cout << "Total lines = " << (i + 0) << std::endl;
     return result;
 }
 
-std::vector<PolarLineExtremum> filterStrongLines(std::vector<PolarLineExtremum> allLines, double thresholdFromWinner) {
+std::vector<PolarLineExtremum> filterStrongLines(std::vector<PolarLineExtremum> allLines, double t) {
     std::vector<PolarLineExtremum> strongLines;
 
     // Эта функция по множеству всех найденных локальных экстремумов (прямых) находит самые правильные
@@ -132,7 +132,7 @@ std::vector<PolarLineExtremum> filterStrongLines(std::vector<PolarLineExtremum> 
         }
     }
     for (int i = 0; i < allLines.size(); i++) {
-        if (allLines[i].votes > q * thresholdFromWinner) {
+        if (allLines[i].votes > q * t) {
             strongLines.push_back(allLines[i]);
         }
     }
