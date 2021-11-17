@@ -12,7 +12,8 @@ void test(std::string name) {
 
     std::string full_path = "lesson05/data/" + name + ".jpg";
     cv::Mat img = cv::imread(full_path);
-    cv::imwrite("lesson08/resultsData/" + name + "_0.png", img); // сохраним еще раз изначальную картинку в папку с результатами чтобы была под рукой
+    cv::imwrite("lesson08/resultsData/" + name + "_0.png",
+                img); // сохраним еще раз изначальную картинку в папку с результатами чтобы была под рукой
     rassert(!img.empty(), 238982391080010);
     cv::cvtColor(img, img, cv::COLOR_BGR2GRAY); // преобразуем в оттенки серого
 
@@ -34,7 +35,7 @@ void test(std::string name) {
         for (int i = 0; i < sobel_strength.cols; ++i) {
             float dx = grad_x.at<float>(j, i);
             float dy = grad_y.at<float>(j, i);
-            float gradient_strength = sqrtf(dx*dx+dy*dy);
+            float gradient_strength = sqrtf(dx * dx + dy * dy);
             sobel_strength.at<float>(j, i) = gradient_strength;
         }
     }
@@ -55,7 +56,7 @@ void test(std::string name) {
         }
     }
     // заменим каждый пиксель с яркости X на яркость X*255.0f/max_accumulated (т.е. уменьшим диапазон значений)
-    cv::imwrite("lesson08/resultsData/" + name + "_2_hough_normalized.png", hough*255.0f/max_accumulated);
+    cv::imwrite("lesson08/resultsData/" + name + "_2_hough_normalized.png", hough * 255.0f / max_accumulated);
 
     // TODO здесь может быть полезно сгладить пространство Хафа, см. комментарии на сайте - https://www.polarnick.com/blogs/239/2021/school239_11_2021_2022/2021/11/09/lesson9-hough2-interpolation-extremum-detection.html
 
@@ -68,7 +69,8 @@ void test(std::string name) {
 
     std::cout << "Found " << lines.size() << " extremums:" << std::endl;
     for (int i = 0; i < lines.size(); ++i) {
-        std::cout << "  Line #" << (i + 1) << " theta=" << lines[i].theta << " r=" << lines[i].r << " votes=" << lines[i].votes << std::endl;
+        std::cout << "  Line #" << (i + 1) << " theta=" << lines[i].theta << " r=" << lines[i].r << " votes="
+                  << lines[i].votes << std::endl;
     }
 }
 
