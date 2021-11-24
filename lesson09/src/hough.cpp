@@ -220,7 +220,9 @@ cv::Mat drawLinesOnImage(cv::Mat img, std::vector<PolarLineExtremum> lines)
     // выпишем размер картинки
     int width = imgWithLines.cols;
     int height = imgWithLines.rows;
-
+    int r = std::rand() % 255;
+    int g = std::rand() % 255;
+    int b = std::rand() % 255;
     for (int i = 0; i < lines.size(); ++i) {
         PolarLineExtremum line = lines[i];
         int theta0 = line.theta;
@@ -231,8 +233,16 @@ cv::Mat drawLinesOnImage(cv::Mat img, std::vector<PolarLineExtremum> lines)
             int y = k0*x + b0;
             if((y >= 0) && (y<height)) {
                 cv::Point p(x, y);
-                cv::Scalar c(0,0,255);
-                cv::circle(imgWithLines, p, 5, c);
+                cv::Scalar c(b,g,r);
+                cv::circle(imgWithLines, p, 1, c);
+            }
+        }
+        for(int y = 0; y< height; y++) {
+            int x = (y-b0)/k0;
+            if((x >= 0) && (x<width)) {
+                cv::Point p(x, y);
+                cv::Scalar c(b,g,r);
+                cv::circle(imgWithLines, p, 1, c);
             }
         }
         // нам надо найти точки на краях картинки
