@@ -220,10 +220,10 @@ cv::Mat drawLinesOnImage(cv::Mat img, std::vector<PolarLineExtremum> lines)
     // выпишем размер картинки
     int width = imgWithLines.cols;
     int height = imgWithLines.rows;
-    int r = std::rand() % 255;
-    int g = std::rand() % 255;
-    int b = std::rand() % 255;
     for (int i = 0; i < lines.size(); ++i) {
+        int r = std::rand() % 255;
+        int g = std::rand() % 255;
+        int b = std::rand() % 255;
         PolarLineExtremum line = lines[i];
         int theta0 = line.theta;
         double r0 = line.r;
