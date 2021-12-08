@@ -87,7 +87,7 @@ std::ostream &operator<<(std::ostream &os, const HoG &hog) {
     os << "HoG[";
     double angleInDegrees = 22.5;
     for (int bin = 0; bin < NBINS; ++bin) {
-        int percentage = (hog.at(bin)/all)*100;
+        double percentage = (hog.at(bin)/all)*100;
         os << angleInDegrees << "=" << percentage << "%, ";
         angleInDegrees+=45;
     }
@@ -97,6 +97,10 @@ std::ostream &operator<<(std::ostream &os, const HoG &hog) {
 
 double pow2(double x) {
     return x * x;
+}
+
+double p(double x, double y){
+    return double ((x/y)*100);
 }
 
 // TODO реализуйте функцию которая по двум гистограммам будет говорить насколько они похожи
@@ -117,6 +121,27 @@ double distance(HoG a, HoG b) {
     // подумайте - как можно добавить независимость (инвариантность) гистаграммы градиентов к тому насколько контрастная или блеклая картинка?
     // подсказка: на контрастной картинке все градиенты гораздо сильнее, а на блеклой картинке все градиенты гораздо слабее, но пропорции между градиентами (распроцентовка) не изменны!
 
-    double res = 0.0;
+    for (int g = 0; g < 8; g++){
+        a.push_back(a.at(g));
+    }
+
+
+    double res = DBL_MAX;
+    for ( int i = 0; i < 1; i++){
+        double len = pow2(p(a.at(i), alla) - p(b.at(0), allb) );
+        len += pow2(p(a.at(i+1), alla) - p(b.at(1), allb) );
+        len += pow2(p(a.at(i+2), alla) - p(b.at(2), allb) );
+        len += pow2(p(a.at(i+3), alla) - p(b.at(3), allb) );
+        len += pow2(p(a.at(i+4), alla) - p(b.at(4), allb) );
+        len += pow2(p(a.at(i+5), alla) - p(b.at(5), allb) );
+        len += pow2(p(a.at(i+6), alla) - p(b.at(6), allb) );
+        len += pow2(p(a.at(i+7), alla) - p(b.at(7), allb) );
+        len = sqrt(len);
+        if (len < res){
+            res = len;
+        }
+    }
+
+
     return res;
 }
