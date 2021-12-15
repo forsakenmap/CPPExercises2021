@@ -86,13 +86,13 @@ void test(std::string name, std::string k) {
     // TODO 05
     std::vector<std::vector<cv::Point>> contoursPoints; // по сути это вектор, где каждый элемент - это одна связная компонента-контур,
     // а что такое компонента-контур? это вектор из точек (из пикселей)
-    cv::findContours(binary, contoursPoints, cv::RETR_EXTERNAL  ,cv::CHAIN_APPROX_NONE  ); // TODO подумайте, какие нужны два последних параметра? прочитайте документацию, после реализации отрисовки контура - поиграйте с этими параметрами чтобы посмотреть как меняется результат
+    cv::findContours(binary_dilated, contoursPoints, cv::RETR_EXTERNAL  ,cv::CHAIN_APPROX_NONE  ); // TODO подумайте, какие нужны два последних параметра? прочитайте документацию, после реализации отрисовки контура - поиграйте с этими параметрами чтобы посмотреть как меняется результат
     std::cout << "Contours: " << contoursPoints.size() << std::endl;
     cv::Mat imageWithContoursPoints = drawContours(img.rows, img.cols, contoursPoints); // TODO 06 реализуйте функцию которая покажет вам как выглядят найденные контура
     cv::imwrite(out_path + "/06_contours_points.jpg", imageWithContoursPoints);
 
     std::vector<std::vector<cv::Point>> contoursPoints2;
-    cv::findContours(binary, contoursPoints2, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+    cv::findContours(binary_dilated, contoursPoints2, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
     // TODO:
     // Обратите внимание на кромку картинки - она всё победила, т.к. черное - это ноль - пустота, а белое - это 255 - сам объект интереса
     // как перевернуть ситуацию чтобы периметр не был засчитан как контур?
@@ -105,11 +105,12 @@ void test(std::string name, std::string k) {
     cv::imwrite(out_path + "/07_contours_points2.jpg", imageWithContoursPoints2);
 
     // TODO 06 наконец давайте посмотрим какие буковки нашлись - обрамим их прямоугольниками
-    cv::Mat imgWithBoxes = original.clone();
+
+    cv::Mat imgWithBoxes = binary_dilated.clone();
     for (int contourI = 0; contourI < contoursPoints.size(); ++contourI) {
         std::vector<cv::Point> points = contoursPoints[contourI]; // перем очередной контур
         cv::Rect box = cv::boundingRect(points); // строим прямоугольник по всем пикселям контура (bounding box = бокс ограничивающий объект)
-        cv::Scalar blackColor(0, 0, 0);
+        cv::Scalar blackColor(255, 255, 255);
         // TODO прочитайте документацию cv::rectangle чтобы нарисовать прямоугольник box с толщиной 2 и черным цветом (обратите внимание какие есть поля у box)
         cv::rectangle(imgWithBoxes , box , blackColor, 2,cv::LINE_4 );
     }

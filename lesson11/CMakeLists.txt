@@ -11,7 +11,8 @@ find_package(OpenCV 4.5.1 REQUIRED)
 
 set(SOURCES
         src/parseSymbols.cpp
-        src/parseSymbols.h)
+        src/parseSymbols.h
+        src)
 
 set(LIBRARIES
         libutils
