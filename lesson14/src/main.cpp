@@ -22,7 +22,7 @@ void drawText(cv::Mat img, std::string text, double fontScale, int &yOffset) {
 
 
 void run() {
-    const bool uWc = false;
+    const bool uWc = true;
     bool drawOver = true; // рисовать ли поверх наложенную картинку (можно включить-включить чтобы мигнуть картинкой и проверить качество выравнивания)
     bool drawDebug = true; // рисовать ли поверх отладочную информацию (например красный кант вокруг нарисованной поверх картинки)
     bool useSIFTDescriptor = false; // SIFT работает довольно медленно, попробуйте использовать ORB + не забудьте что тогда вам нужен другой DescriptorMatcher
@@ -132,7 +132,7 @@ void run() {
             if (points0.size() <= 10 || H01.empty()) {
                 // см. документацию https://docs.opencv.org/4.5.1/d9/d0c/group__calib3d.html#ga4abc2ece9fab9398f2e560d53c8c9780
                 // "Note that whenever an H matrix cannot be estimated, an empty one will be returned."
-                std::cout << "FAIL 24123422!" << std::endl;
+                std::cout << "No replace" << std::endl;
             } else {
                 cv::Mat overlapImg = imgToDraw.clone();
                 if (drawDebug) {
