@@ -22,23 +22,24 @@ void drawText(cv::Mat img, std::string text, double fontScale, int &yOffset) {
 
 
 void run() {
-    const bool useWebcam = true;
-
+    const bool uWc = false;
     bool drawOver = true; // рисовать ли поверх наложенную картинку (можно включить-включить чтобы мигнуть картинкой и проверить качество выравнивания)
     bool drawDebug = true; // рисовать ли поверх отладочную информацию (например красный кант вокруг нарисованной поверх картинки)
     bool useSIFTDescriptor = false; // SIFT работает довольно медленно, попробуйте использовать ORB + не забудьте что тогда вам нужен другой DescriptorMatcher
-
     cv::Mat imgFrame, imgForDetection, imgToDraw;
     // если у вас не работает через веб. камеру - будут использоваться заготовленные картинки
-    imgFrame = cv::imread("lesson14/data/1_box2/box0.png"); // пример кадра с вебкамеры, на нем мы хотим найти объект и вместо него нарисовать другую картинку
-    imgForDetection = cv::imread("lesson14/data/1_box2/box1.png"); // пример картинки которую мы хотим найти на видеокадре
-    imgToDraw = cv::imread("lesson14/data/1_box2/box1_nesquik.png"); // пример картинки которую мы хотим нарисовать заместо искомой
+    imgFrame = cv::imread(
+            "lesson14/data/1_box2/box0.png"); // пример кадра с вебкамеры, на нем мы хотим найти объект и вместо него нарисовать другую картинку
+    imgForDetection = cv::imread(
+            "lesson14/data/1_box2/box1.png"); // пример картинки которую мы хотим найти на видеокадре
+    imgToDraw = cv::imread(
+            "lesson14/data/1_box2/box1_nesquik.png"); // пример картинки которую мы хотим нарисовать заместо искомой
     rassert(!imgFrame.empty(), 324789374290023);
     rassert(!imgForDetection.empty(), 3789572984290019);
     rassert(!imgToDraw.empty(), 3789572984290021);
 
     std::shared_ptr<cv::VideoCapture> video;
-    if (useWebcam) {
+    if (uWc) {
         std::cout << "Trying to open web camera..." << std::endl;
         video = std::make_shared<cv::VideoCapture>(0);
         rassert(video->isOpened(), 3482789346289027);
@@ -47,20 +48,17 @@ void run() {
 
     while (true) {
         cv::Mat currentFrame; // текущий кадр с веб. камеры
-        if (useWebcam) {
+        if (uWc) {
             bool isSuccess = video->read(currentFrame);
             rassert(isSuccess, 347283947290039);
             rassert(!currentFrame.empty(), 347283947290040);
         } else {
             currentFrame = imgFrame; // или если у вас не работает OpenCV с веб. камерой - то пусть хотя бы картинка-пример используется
         }
-
         auto frameProcessingStartTime = std::chrono::steady_clock::now(); // замеряем сколько сейчас времени чтобы оценить FPS
         auto frameFilteringStartTime = std::chrono::steady_clock::now();
         auto frameMatchingStartTime = std::chrono::steady_clock::now();
-
         cv::Mat mainWindowImage = currentFrame.clone(); // делаем копию чтобы на ней рисовать любую отладочную информацию не портя оригинальную картинку
-
         {
             // TODO сопоставьте две картинки: currentFrame и imgForDetection, затем нарисуйте imgToDraw в соответствии с матрицей Гомографии
             cv::Ptr<cv::FeatureDetector> detector;
@@ -80,59 +78,47 @@ void run() {
             cv::Mat descriptors0, descriptors1;
             detector->detectAndCompute(currentFrame, cv::noArray(), keypoints0, descriptors0);
             detector->detectAndCompute(imgForDetection, cv::noArray(), keypoints1, descriptors1);
-
-            std::cout << "Keypoints initially: " << keypoints0.size() << ", " << keypoints1.size() << "..." << std::endl;
-
+            std::cout << "Keypoints initially: " << keypoints0.size() << ", " << keypoints1.size() << "..."
+                      << std::endl;
             frameMatchingStartTime = std::chrono::steady_clock::now();
             std::vector<std::vector<cv::DMatch>> matches01;
             matcher->knnMatch(descriptors0, descriptors1, matches01, 2);
             std::vector<std::vector<cv::DMatch>> matches10;
             matcher->knnMatch(descriptors1, descriptors0, matches10, 2);
             std::vector<double> distances01;
-            for (auto & i : matches01) {
+            for (auto &i : matches01) {
                 distances01.push_back(i[0].distance);
             }
             std::sort(distances01.begin(), distances01.end());
             std::vector<double> distances10;
-            for (auto & i : matches10) {
+            for (auto &i : matches10) {
                 distances10.push_back(i[0].distance);
             }
             std::sort(distances10.begin(), distances10.end());
-
             frameFilteringStartTime = std::chrono::steady_clock::now();
             std::vector<cv::Point2f> points0;
             std::vector<cv::Point2f> points1;
             for (int i = 0; i < keypoints0.size(); ++i) {
                 cv::DMatch match = matches01[i][0];
-                rassert(match.queryIdx == i, 234782749278097); // и вновь - queryIdx это откуда точки (поэтому всегда == i)
-                int j = match.trainIdx; // и trainIdx - это какая точка из второго массива точек оказалась к нам (к queryIdx из первого массива точек) ближайшей
-                rassert(j < keypoints1.size(), 38472957238099); // поэтому явно проверяем что индекс не вышел за пределы второго массива точек
-
-                bool isOk = true;
-
-                //Отфильтровывает 50%
-                if (match.distance > distances01[distances01.size()/2]) {
-                    isOk = false;
+                rassert(match.queryIdx == i,
+                        234782749278097);
+                int j = match.trainIdx;
+                rassert(j < keypoints1.size(),
+                        38472957238099);
+                if (match.distance > distances01[distances01.size() / 2]) {
+                    continue;
                 }
-
-                //Почти не фильтрует(около 90+%)
-                double k = 0.7;
                 cv::DMatch match2 = matches01[i][1];
-                if (match.distance > k*match2.distance) {
-                    isOk = false;
+                if (match.distance > 0.7 * match2.distance) {
+                    continue;
                 }
-
-                //Отфильтровывает 70%
                 cv::DMatch match01 = match;
                 cv::DMatch match10 = matches10[match01.trainIdx][0];
                 if (match10.trainIdx != i) {
-                    isOk = false;
+                    continue;
                 }
-
-                if (isOk) {
-                    points0.push_back(keypoints0[i].pt);
-                    points1.push_back(keypoints1[j].pt);
-                }
+                points0.push_back(keypoints0[i].pt);
+                points1.push_back(keypoints1[j].pt);
             }
             rassert(points0.size() == points1.size(), 234723947289089);
             std::cout << points0.size() << "/" << keypoints0.size() << " good matches left" << std::endl;
@@ -141,7 +127,7 @@ void run() {
             const double ransacReprojThreshold = 3.0;
             std::vector<unsigned char> inliersMask;
             cv::Mat H01;
-            if(points0.size() > 10)
+            if (points0.size() > 10)
                 H01 = cv::findHomography(points0, points1, cv::RANSAC, ransacReprojThreshold, inliersMask);
             if (points0.size() <= 10 || H01.empty()) {
                 // см. документацию https://docs.opencv.org/4.5.1/d9/d0c/group__calib3d.html#ga4abc2ece9fab9398f2e560d53c8c9780
@@ -152,39 +138,46 @@ void run() {
                 if (drawDebug) {
                     // рисуем красный край у накладываемой картинки
                     cv::Scalar red(0, 0, 255);
-                    cv::rectangle(overlapImg, cv::Point(0, 0), cv::Point(overlapImg.cols-1, overlapImg.rows-1), red, 2);
+                    cv::rectangle(overlapImg, cv::Point(0, 0), cv::Point(overlapImg.cols - 1, overlapImg.rows - 1), red,
+                                  2);
                 }
                 if (drawOver) {
                     cv::Mat H10 = H01.inv(); // у матрицы есть обратная матрица - находим ее, какое преобразование она делает?
-                    cv::warpPerspective(overlapImg, mainWindowImage, H10, mainWindowImage.size(), cv::INTER_LINEAR, cv::BORDER_TRANSPARENT);
+                    cv::warpPerspective(overlapImg, mainWindowImage, H10, mainWindowImage.size(), cv::INTER_LINEAR,
+                                        cv::BORDER_TRANSPARENT);
                 }
             }
         }
 
         if (drawDebug) {
-            int textYOffset = 0;
-
+            int t = 0;
             auto frameProcessingEndTime = std::chrono::steady_clock::now();
-            int timeForFrame = std::chrono::duration_cast<std::chrono::milliseconds>(frameProcessingEndTime - frameProcessingStartTime).count();
-            int timeForFiltering = std::chrono::duration_cast<std::chrono::milliseconds>(frameProcessingEndTime - frameFilteringStartTime).count();
-            int timeForMatching = std::chrono::duration_cast<std::chrono::milliseconds>(frameFilteringStartTime - frameMatchingStartTime).count();
-            int timeForDetecting = std::chrono::duration_cast<std::chrono::milliseconds>(frameMatchingStartTime - frameProcessingStartTime).count();
+            int timeForFrame = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    frameProcessingEndTime - frameProcessingStartTime).count();
+            int timeForFiltering = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    frameProcessingEndTime - frameFilteringStartTime).count();
+            int timeForMatching = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    frameFilteringStartTime - frameMatchingStartTime).count();
+            int timeForDetecting = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    frameMatchingStartTime - frameProcessingStartTime).count();
             int fps;
             if (timeForFrame == 0) {
-                fps = 99999;
+                fps = 1001;
             } else {
                 fps = (int) std::round(1000.0 / timeForFrame);
             }
-            drawText(mainWindowImage, std::to_string(fps) + " FPS", 0.5, textYOffset);
+            drawText(mainWindowImage, std::to_string(fps) + " FPS", 0.5, t);
 
             // TODO добавьте короткую справку про кнопки управления
-            drawText(mainWindowImage, "Controls: 1 - change detecting image, 2 - change replacing image, 3 - enable/disable debug info, S - change method(SIFT/ORB), H - enable/disable overlay", 0.5, textYOffset);
-
-            drawText(mainWindowImage, "Timings: " + std::to_string(timeForFrame) + " ms = "
-                                      + std::to_string(timeForDetecting) + " ms detect + "
-                                      + std::to_string(timeForMatching) + " ms match + "
-                                      + std::to_string(timeForFiltering) + " ms filter",
-                     0.5, textYOffset);
+            drawText(mainWindowImage, "1 - change detecting image, 2 - change replacing image", 0.5, t);
+            drawText(mainWindowImage, "3 - enable/disable debug info, S - change method(SIFT(slow)/ORB(fast))", 0.5,
+                     t);
+            drawText(mainWindowImage, "H - enable/disable overlay", 0.5, t);
+            drawText(mainWindowImage,
+                     "Time: " + std::to_string(timeForFrame) + " ms = " + std::to_string(timeForDetecting) +
+                     " ms detect + " + std::to_string(timeForMatching) + " ms match + "
+                     + std::to_string(timeForFiltering) + " ms filter",
+                     0.5, t);
         }
 
         // Рисуем все три окошка:
@@ -193,14 +186,15 @@ void run() {
         cv::imshow("Image to draw", imgToDraw);
 
         // Смотрим нажал ли пользователь какую-нибудь кнопку
-        int key = cv::waitKey(10); // число в скобочках - максимальное число миллисекунд которые мы ждем кнопки от пользователя, а иначе - считаем что ничего не нажато
+        int key = cv::waitKey(
+                10); // число в скобочках - максимальное число миллисекунд которые мы ждем кнопки от пользователя, а иначе - считаем что ничего не нажато
         if (key == -1) {
             // прошло 5 миллисекунд но ничего не было нажато - значит идем обрабатывать следующий кадр с веб. камеры
         } else if (key == 27) { // Esc - выключаем программу
             break;
-        } else if (useWebcam && key == 49) {
+        } else if (uWc && key == 49) {
             imgForDetection = currentFrame.clone();
-        } else if (useWebcam && key == 50) {
+        } else if (uWc && key == 50) {
             imgToDraw = currentFrame.clone();
         } else if (key == 104) {
             drawOver = !drawOver;
@@ -216,12 +210,14 @@ void run() {
 
 
 int main() {
-    try {
-        run();
-
-        return 0;
-    } catch (const std::exception &e) {
-        std::cout << "Exception! " << e.what() << std::endl;
-        return 1;
+    while (true) {
+        try {
+            run();
+            return 0;
+        } catch (const std::exception &e) {
+            std::cout << "Exception! " << e.what() << std::endl;
+            std::cout << "Restart" << std::endl;
+            return 1;
+        }
     }
 }
