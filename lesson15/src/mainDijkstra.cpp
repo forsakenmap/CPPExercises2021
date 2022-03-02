@@ -83,6 +83,9 @@ void run() {
                     second_s.push_back(a.v);
                 }
                 if (distances.at(a.v) > distances.at(a.u) + a.w) {
+                    if(!found(second_s, a.v)) {
+                        second_s.push_back(a.v);
+                    }
                     distances.at(a.v) = distances.at(a.u) + a.w;
                     put.at(a.v) = put.at(a.u) + " " + std::to_string(a.v + 1);
                 }

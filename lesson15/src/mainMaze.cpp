@@ -18,6 +18,17 @@ bool found(std::vector<int> a, int b) {
     }
     return false;
 }
+int sum (cv::Vec3b a) {
+    return a[0]+a[1]+ a[2];
+};
+bool isWhite(int i, int j, cv::Mat m) {
+    if(sum(m.at<cv::Vec3b>(i,j)) > 200) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 
 struct Edge {
     int u, v; // номера вершин которые это ребро соединяет
@@ -35,7 +46,8 @@ int encodeVertex(int row, int column, int nrows, int ncolumns) {
     return vertexId;
 }
 int distance(unsigned char r1, unsigned char g1, unsigned char b1, unsigned char r2, unsigned char g2, unsigned char b2){
-    return round(sqrt(pow(r2-r1,2)+pow(g2-g1,2)+pow(b2-b1,2)));
+   // return round(sqrt(pow(r2-r1,2)+pow(g2-g1,2)+pow(b2-b1,2)));
+   return 1;
 }
 // Эта биективная функция по номеру вершины говорит какой пиксель этой вершине соовтетствует (эта функция должна быть симметрична предыдущей!)
 cv::Point2i decodeVertex(int vertexId, int nrows, int ncolumns) {
@@ -63,31 +75,33 @@ void run(int mazeNumber) {
     std::vector<std::vector<Edge>> edges_by_vertex(nvertices);
     for (int i = 0; i < maze.rows; ++i) {
         for (int j = 0; j < maze.cols; ++j) {
-            cv::Vec3b color = maze.at<cv::Vec3b>(i,j);
-            unsigned char blue = color[0];
-            unsigned char green = color[1];
-            unsigned char red = color[2];
+            if (!isWhite(i, j, maze)) {
+                cv::Vec3b color = maze.at<cv::Vec3b>(i, j);
+                unsigned char blue = color[0];
+                unsigned char green = color[1];
+                unsigned char red = color[2];
 
-            auto ai = encodeVertex(i,j,maze.rows,maze.cols);
-            if(i > 0) {
-                cv::Vec3b color2 = maze.at<cv::Vec3b>(i-1,j);
-                edges_by_vertex[ai].emplace_back(ai, encodeVertex(i-1,j, maze.rows, maze.cols),
-                                                 distance(color2[0], color2[1], color2[2], red, green, blue)+1);
-            }
-            if(i < maze.rows-1) {
-                cv::Vec3b color2 = maze.at<cv::Vec3b>(i+1,j);
-                edges_by_vertex[ai].emplace_back(ai, encodeVertex(i+1,j, maze.rows, maze.cols),
-                                                 distance(color2[0], color2[1], color2[2], red, green, blue)+1);
-            }
-            if(j > 0) {
-                cv::Vec3b color2 = maze.at<cv::Vec3b>(i,j-1);
-                edges_by_vertex[ai].emplace_back(ai, encodeVertex(i,j-1, maze.rows, maze.cols),
-                                                 distance(color2[0], color2[1], color2[2], red, green, blue)+1);
-            }
-            if(j < maze.cols-1) {
-                cv::Vec3b color2 = maze.at<cv::Vec3b>(i,j+1);
-                edges_by_vertex[ai].emplace_back(ai, encodeVertex(i,j+1, maze.rows, maze.cols),
-                                                 distance(color2[0], color2[1], color2[2], red, green, blue)+1);
+                auto ai = encodeVertex(i, j, maze.rows, maze.cols);
+                if ((i > 0) && (!isWhite(i-1, j, maze))) {
+                    cv::Vec3b color2 = maze.at<cv::Vec3b>(i - 1, j);
+                    edges_by_vertex[ai].emplace_back(ai, encodeVertex(i - 1, j, maze.rows, maze.cols),
+                                                     distance(color2[0], color2[1], color2[2], red, green, blue) + 1);
+                }
+                if ((i < maze.rows - 1) && (!isWhite(i+1, j, maze))) {
+                    cv::Vec3b color2 = maze.at<cv::Vec3b>(i + 1, j);
+                    edges_by_vertex[ai].emplace_back(ai, encodeVertex(i + 1, j, maze.rows, maze.cols),
+                                                     distance(color2[0], color2[1], color2[2], red, green, blue) + 1);
+                }
+                if ((j > 0) && (!isWhite(i, j - 1, maze))) {
+                    cv::Vec3b color2 = maze.at<cv::Vec3b>(i, j - 1);
+                    edges_by_vertex[ai].emplace_back(ai, encodeVertex(i, j - 1, maze.rows, maze.cols),
+                                                     distance(color2[0], color2[1], color2[2], red, green, blue) + 1);
+                }
+                if ((j < maze.cols - 1) && (!isWhite(i, j+1, maze))) {
+                    cv::Vec3b color2 = maze.at<cv::Vec3b>(i, j + 1);
+                    edges_by_vertex[ai].emplace_back(ai, encodeVertex(i, j + 1, maze.rows, maze.cols),
+                                                     distance(color2[0], color2[1], color2[2], red, green, blue) + 1);
+                }
             }
         }
     }
@@ -105,13 +119,13 @@ void run(int mazeNumber) {
         rassert(false, 324289347238920081);
     }
 
-    const int INF = std::numeric_limits<long>::max();
+    const int INF = std::numeric_limits<int>::max();
     cv::Mat window = maze.clone(); // на этой картинке будем визуализировать до куда сейчас дошла прокладка маршрута
     std::vector<bool> edg_be(nvertices, false);
     Edge a(0, 0, 0);
     int s = 0;
-    std::vector<long long> distances(nvertices, INF);
-    distances.at(0) = 0;
+    std::vector<long> distances(nvertices, INF);
+    distances.at(start) = 0;
     int min = INF;
     int num = 0;
     std::vector<std::string> put(nvertices, "");
@@ -119,25 +133,30 @@ void run(int mazeNumber) {
     first_s.push_back(start);
     std::vector<int> second_s;
     // TODO ...
+    int b = 0;
     while (true) {
         for (int i = 0; i < first_s.size(); i++) {
             for (int k = 0; k < edges_by_vertex[first_s.at(i)].size(); k++) {
                 a = edges_by_vertex[first_s.at(i)].at(k);
-             //   if ((!edg_be.at(first_s.at(i))) && (!found(second_s, a.v))) {
-            //        second_s.push_back(a.v);
-             //   }
+               if ((!edg_be.at(first_s.at(i))) && (!found(second_s, a.v))) {
+                  second_s.push_back(a.v);
+               }
                 if (distances.at(a.v) > distances.at(a.u) + a.w) {
                     if(!found(second_s, a.v)) {
                         second_s.push_back(a.v);
                     }
-                   // cv::imshow("Maze", window);
-                   // cv::waitKey(1);
+                    if(b == 100) {
+                       cv::imshow("Maze", window.clone());
+                       cv::waitKey(10);
+                        b = 0;
+                    }
                    cv::Point2i p = decodeVertex(a.u, maze.rows, maze.cols);
-                   window.at<cv::Vec3b>(p.y, p.x) = cv::Vec3b(0, 0, 255);
+                   window.at<cv::Vec3b>(p.y, p.x) = cv::Vec3b(0, 255, 0);
                     distances.at(a.v) = distances.at(a.u) + a.w;
                     put.at(a.v) = put.at(a.u) + " " + std::to_string(a.v + 1);
                    // cv::Point2i p = decodeVertex(a.u, maze.rows, maze.cols);
                    // window.at<cv::Vec3b>(p.y, p.x) = cv::Vec3b(0, 255, 0);
+                   b++;
                 }
             }
             edg_be.at(first_s.at(i)) = true;
@@ -157,7 +176,7 @@ void run(int mazeNumber) {
 
     for(auto i : N) {
         cv::Point2i p = decodeVertex(i+1, maze.rows, maze.cols);
-      window.at<cv::Vec3b>(p.y, p.x) = cv::Vec3b(0, 255, 0);
+      window.at<cv::Vec3b>(p.y, p.x) = cv::Vec3b(0, 0, 255);
     }
     std::cout << std::to_string(start) + put.at(finish);
         cv::imshow("Maze", window);
