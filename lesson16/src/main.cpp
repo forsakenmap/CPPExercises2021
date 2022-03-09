@@ -134,8 +134,36 @@ void run(std::string caseName) {
 
     // TODO 1 реализуйте isPixelEmpty(color) объявленную в начале этого файла - она пригодится нам чтобы легко понять какие пиксели в панораме пустые, какие - нет
     // (т.е. эта функция позволит дальше понимать в этот пиксель наложилась исходная картинка или же там все еще тьма)
-
+    cv::Vec3b c;
+    c[0] = 0;
+    c[1] = 0;
+    c[2] = 0;
+    cv::Vec3b w;
+    w[0] = 255;
+    w[1] = 255;
+    w[2] = 255;
+    int k = 0;
     cv::Mat panoDiff(pano_rows, pano_cols, CV_8UC3, cv::Scalar(0, 0, 0));
+    panoDiff = panoBothNaive.clone();
+    for(int i = 0; i < pano0.cols; i++) {
+        for(int e = 0; e < pano0.rows; e++) {
+            if(isPixelEmpty(pano0.at<cv::Vec3b>(e, i))) {
+                k++;
+            } if (isPixelEmpty(pano0.at<cv::Vec3b>(e, i))) {
+                k++;
+            }
+            switch(k) {
+                case 0:
+
+                case 1:
+                    panoDiff.at<cv::Vec3b>(e, i) = w;
+                case 2:
+                    panoDiff.at<cv::Vec3b>(e, i) = c;
+            }
+            k = 0;
+        }
+    }
+
     // TODO 2 вам надо заполнить panoDiff картинку так чтобы было четко ясно где pano0 картинка (объявлена выше) и pano1 картинка отличаются сильно, а где - слабо:
     // сравните в этих двух картинках пиксели по одинаковым координатам (т.е. мы сверяем картинки) и покрасьте соответствующий пиксель panoDiff по этой логике:
     // - если оба пикселя пустые - проверяйте это через isPixelEmpty(color) (т.е. цвета черные) - результат тоже пусть черный
