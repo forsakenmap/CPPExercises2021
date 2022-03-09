@@ -13,10 +13,16 @@
 
 bool isPixelEmpty(cv::Vec3b color) {
     // TODO 1 реализуйте isPixelEmpty(color):
+    if((color[0] <= 20) && (color[1] <= 20) && (color[2] <= 20)) {
+        return true;
+    } else {
+        return false;
+    }
+
     // - верните true если переданный цвет - полностью черный (такие пиксели мы считаем пустыми)
     // - иначе верните false
     rassert(false, "325235141242153: You should do TODO 1 - implement isPixelEmpty(color)!");
-    return true;
+  //  return true;
 }
 
 void run(std::string caseName) {
@@ -73,7 +79,7 @@ void run(std::string caseName) {
     // Находим матрицу преобразования второй картинки в систему координат первой картинки
     cv::Mat H10 = cv::findHomography(points1, points0, cv::RANSAC, 3.0);
     rassert(H10.size() == cv::Size(3, 3), 3482937842900059); // см. документацию https://docs.opencv.org/4.5.1/d9/d0c/group__calib3d.html#ga4abc2ece9fab9398f2e560d53c8c9780
-                                                                             // "Note that whenever an H matrix cannot be estimated, an empty one will be returned."
+    // "Note that whenever an H matrix cannot be estimated, an empty one will be returned."
 
     // создаем папку в которую будем сохранять результаты - lesson16/resultsData/ИМЯ_НАБОРА/
     std::string resultsDir = "lesson16/resultsData/";
@@ -148,7 +154,7 @@ int main() {
         run("1_hanging"); // TODO 3 проанализируйте результаты по фотографиям с дрона - где различие сильное, где малое? почему так?
         run("2_hiking"); // TODO 4 проанализируйте результаты по фотографиям с дрона - где различие сильное, где малое? почему так?
         run("3_aero"); // TODO 5 проанализируйте результаты по фотографиям с дрона - где различие сильное, где малое? почему так?
-        run("4_your_data"); // TODO 6 сфотографируйте что-нибудь сами при этом на второй картинке что-то изменив, проведите анализ
+   //     run("4_your_data"); // TODO 6 сфотографируйте что-нибудь сами при этом на второй картинке что-то изменив, проведите анализ
         // TODO 7 проведите анализ результатов на базе Вопросов-Упражнений предложенных в последней статье "Урок 19: панорама и визуализация качества склейки"
 
         return 0;
