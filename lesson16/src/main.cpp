@@ -143,27 +143,39 @@ void run(std::string caseName) {
     w[1] = 255;
     w[2] = 255;
     int k = 0;
-    cv::Mat panoDiff(pano_rows, pano_cols, CV_8UC3, cv::Scalar(0, 0, 0));
+    cv::Mat panoDiff(panoBothNaive.rows, panoBothNaive.cols, CV_8UC3, cv::Scalar(0, 0, 100));
     panoDiff = panoBothNaive.clone();
+
+
     for(int i = 0; i < pano0.cols; i++) {
         for(int e = 0; e < pano0.rows; e++) {
             if(isPixelEmpty(pano0.at<cv::Vec3b>(e, i))) {
                 k++;
-            } if (isPixelEmpty(pano0.at<cv::Vec3b>(e, i))) {
+            } if (isPixelEmpty(pano1.at<cv::Vec3b>(e, i))) {
                 k++;
             }
-            switch(k) {
-                case 0:
+            if (k == 0){
 
-                case 1:
-                    panoDiff.at<cv::Vec3b>(e, i) = w;
-                case 2:
-                    panoDiff.at<cv::Vec3b>(e, i) = c;
+            } else if (k == 1){
+                panoDiff.at<cv::Vec3b>(e, i) = w;
+            } else {
+                panoDiff.at<cv::Vec3b>(e, i) = c;
             }
+//            switch(k) {
+//                case 0:
+//                    //nothing
+//                case 1:
+//                    panoDiff.at<cv::Vec3b>(e, i) = w;
+//                case 2:
+//                    panoDiff.at<cv::Vec3b>(e, i) = c;
+//            }
             k = 0;
+          //  cv::imshow("Maze", panoDiff.clone());
+          // cv::waitKey(10);
+
         }
     }
-
+    cv::imwrite(resultsDir + "5panoDiff.jpg", panoDiff);
     // TODO 2 вам надо заполнить panoDiff картинку так чтобы было четко ясно где pano0 картинка (объявлена выше) и pano1 картинка отличаются сильно, а где - слабо:
     // сравните в этих двух картинках пиксели по одинаковым координатам (т.е. мы сверяем картинки) и покрасьте соответствующий пиксель panoDiff по этой логике:
     // - если оба пикселя пустые - проверяйте это через isPixelEmpty(color) (т.е. цвета черные) - результат тоже пусть черный
@@ -173,7 +185,7 @@ void run(std::string caseName) {
     // Напоминание - вот так можно выставить цвет в пикселе:
     //  panoDiff.at<cv::Vec3b>(j, i) = cv::Vec3b(blueValue, greenValue, redValue);
 
-    cv::imwrite(resultsDir + "5panoDiff.jpg", panoDiff);
+   // cv::imwrite(resultsDir + "5panoDiff.jpg", panoDiff);
 }
 
 
