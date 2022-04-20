@@ -92,8 +92,7 @@ void run(int caseNumber, std::string caseName) {
     // TODO 15 теперь давайте заменять значение относительного смещения на новой только если новая случайная гипотеза - лучше старой, добавьте оценку "насколько смещенный патч 5х5 похож на патч вокруг пикселя если их наложить"
     //
     // Ориентировочный псевдокод-подсказка получившегося алгоритма:
-    cv::Mat shifts(original.rows, original.cols, CV_32FC2,
-                   cv::Scalar(0, 0)); // матрица хранящая смещения, изначально заполнена парами нулей
+    cv::Mat shifts(original.rows, original.cols, CV_32SC2,cv::Scalar(0, 0)); // матрица хранящая смещения, изначально заполнена парами нулей
 
     std::cout << "Image resolution: " << original.cols << "x" << original.rows << std::endl;
     std::vector<cv::Mat> pyramid; // здесь будем хранить пронумерованные версии картинки разного разрешения
@@ -109,17 +108,17 @@ void run(int caseNumber, std::string caseName) {
     }
 
     std::vector<cv::Mat> pyramidMask;
-    cv::Mat maskPopa = mask.clone();
-    while (maskPopa.rows > PYRAMID_MIN_SIZE && maskPopa.cols > PYRAMID_MIN_SIZE) {
-        pyramid.insert(pyramid.begin(), maskPopa);
-        cv::pyrDown(maskPopa, maskPopa);
+    cv::Mat maskP = mask.clone();
+    while (maskP.rows > PYRAMID_MIN_SIZE && maskP.cols > PYRAMID_MIN_SIZE) {
+        pyramid.insert(pyramid.begin(), maskP);
+        cv::pyrDown(maskP, maskP);
     }
 
     std::vector<cv::Mat> pyramidShifts;
     cv::Mat shiftsP = shifts.clone();
     while (shiftsP.rows > PYRAMID_MIN_SIZE && shiftsP.cols > PYRAMID_MIN_SIZE) {
         pyramid.insert(pyramid.begin(), shiftsP);
-       cv::pyrDown(shiftsP, shiftsP);
+       // cv::pyrDown(shiftsP, shiftsP); - no
     }
 
     for (int l = 0; l < pyramid.size(); l++) {
