@@ -9,7 +9,7 @@
 #include <iostream>
 #include <filesystem>
 #include <memory>
-
+#include <typeinfo>
 #include <libutils/rasserts.h>
 #include <libutils/fast_random.h>
 
@@ -92,14 +92,17 @@ void run(int caseNumber, std::string caseName) {
     // TODO 15 теперь давайте заменять значение относительного смещения на новой только если новая случайная гипотеза - лучше старой, добавьте оценку "насколько смещенный патч 5х5 похож на патч вокруг пикселя если их наложить"
     //
     // Ориентировочный псевдокод-подсказка получившегося алгоритма:
-    cv::Mat shifts(original.rows, original.cols, CV_32SC2,cv::Scalar(0, 0)); // матрица хранящая смещения, изначально заполнена парами нулей
+    cv::Mat shifts(original.rows, original.cols, CV_32SC2,
+                   cv::Scalar(0, 0)); // матрица хранящая смещения, изначально заполнена парами нулей
 
     std::cout << "Image resolution: " << original.cols << "x" << original.rows << std::endl;
     std::vector<cv::Mat> pyramid; // здесь будем хранить пронумерованные версии картинки разного разрешения
     // нулевой уровень - самая грубая, последний уровень - самая детальная
 
     cv::Mat img = original.clone();
-    const int PYRAMID_MIN_SIZE = 20; // до какой поры уменьшать картинку? давайте уменьшать пока картинка больше 20 пикселей
+    rassert(img.type() == CV_8UC3, 3447928472389021);
+
+    const int PYRAMID_MIN_SIZE = 10; // до какой поры уменьшать картинку? давайте уменьшать пока картинка больше 20 пикселей
     while (img.rows > PYRAMID_MIN_SIZE &&
            img.cols > PYRAMID_MIN_SIZE) { // или пока больше (2 * размер окна для оценки качества)
         pyramid.insert(pyramid.begin(),
@@ -110,26 +113,31 @@ void run(int caseNumber, std::string caseName) {
     std::vector<cv::Mat> pyramidMask;
     cv::Mat maskP = mask.clone();
     while (maskP.rows > PYRAMID_MIN_SIZE && maskP.cols > PYRAMID_MIN_SIZE) {
-        pyramid.insert(pyramid.begin(), maskP);
+        pyramidMask.insert(pyramidMask.begin(), maskP);
         cv::pyrDown(maskP, maskP);
     }
 
     std::vector<cv::Mat> pyramidShifts;
     cv::Mat shiftsP = shifts.clone();
-    while (shiftsP.rows > PYRAMID_MIN_SIZE && shiftsP.cols > PYRAMID_MIN_SIZE) {
-        pyramid.insert(pyramid.begin(), shiftsP);
-       // cv::pyrDown(shiftsP, shiftsP); - no
+    int ryadi = shiftsP.rows;
+    int stolbsi = shiftsP.cols;
+
+    while (ryadi > PYRAMID_MIN_SIZE && stolbsi > PYRAMID_MIN_SIZE) {
+        cv::Mat sl(ryadi, stolbsi, CV_32SC2, cv::Scalar(0, 0));
+        pyramidShifts.insert(pyramidShifts.begin(), sl);
+        ryadi = ryadi / 2;
+        stolbsi = stolbsi / 2;
     }
 
     for (int l = 0; l < pyramid.size(); l++) {
         cv::Mat image = pyramid[l];
         cv::Mat mask1 = pyramidMask[l];
         cv::Mat shifts1 = pyramidShifts[l];
-        for (int p = 0; p < 100; p++) {
+        for (int p = 0; p < 10; p++) {
             for (int j = 0; j < image.rows - 2; ++j) {
                 for (int i = 0; i < image.cols - 2; ++i) {
                     if (!isPixelMasked(mask1, j, i)) continue; // пропускаем т.к. его менять не надо
-                    cv::Vec2i dxy = shifts1.at<cv::Vec2i>(j, i); //смотрим какое сейчас смещение для этого пикселя в матрице смещения
+                    cv::Vec2i dxy = shifts1.at<cv::Vec2i>(j,i); //смотрим какое сейчас смещение для этого пикселя в матрице смещения
                     int nx = i + dxy[1];
                     int ny = j + dxy[0];
                     rassert(i >= 0 && i < image.cols && j >= 0 && j < image.rows, 10);
@@ -147,6 +155,7 @@ void run(int caseNumber, std::string caseName) {
                         }
                     }
                     int randomQuality = estimateQuality(image, j, i, newRandy,newRandx); // оцениваем насколько похоже будет если мы приложим эту случайную гипотезу которую только что выбрали
+
                     if (randomQuality < currentQuality || currentQuality == 0) {
                         shifts1.at<cv::Vec2i>(j, i)[0] = newRandy - j;
                         shifts1.at<cv::Vec2i>(j, i)[1] = newRandx - i;
@@ -155,15 +164,29 @@ void run(int caseNumber, std::string caseName) {
                 }
             }
         }
-        if (!(l == pyramid.size()-1)){
-            for (int i = 0; i < pyramidShifts[l].rows-1; ++i) {
-                for (int j = 0; j < pyramidShifts[l].cols-1; ++j) {
-                    //pyramidShifts[l+1].at<cv::Vec2i>(j, i)[0];
+        if (l != pyramid.size() - 1) {
+            for (int i = 0; i < pyramidShifts[l].rows - 1; ++i) {
+                for (int j = 0; j < pyramidShifts[l].cols - 1; ++j) {
+                    if (2 * i + 1 <= pyramidShifts[l + 1].cols && 2 * j + 1 <= pyramidShifts[l + 1].rows) {
+                        pyramidShifts[l + 1].at<cv::Vec2i>(2 * j, 2 * i)[0] = pyramidShifts[l].at<cv::Vec2i>(j, i)[0] * 2;
+                        pyramidShifts[l + 1].at<cv::Vec2i>(2 * j, 2 * i)[1] = pyramidShifts[l].at<cv::Vec2i>(j, i)[1] * 2;
+                        pyramidShifts[l + 1].at<cv::Vec2i>(2 * j + 1, 2 * i + 1)[0] = pyramidShifts[l].at<cv::Vec2i>(j, i)[0] * 2;
+                        pyramidShifts[l + 1].at<cv::Vec2i>(2 * j + 1, 2 * i + 1)[1] = pyramidShifts[l].at<cv::Vec2i>(j, i)[1] * 2;
+                        pyramidShifts[l + 1].at<cv::Vec2i>(2 * j, 2 * i + 1)[0] = pyramidShifts[l].at<cv::Vec2i>(j, i)[0] * 2;
+                        pyramidShifts[l + 1].at<cv::Vec2i>(2 * j, 2 * i + 1)[1] = pyramidShifts[l].at<cv::Vec2i>(j, i)[1] * 2;
+                        pyramidShifts[l + 1].at<cv::Vec2i>(2 * j + 1, 2 * i)[0] = pyramidShifts[l].at<cv::Vec2i>(j, i)[0] * 2;
+                        pyramidShifts[l + 1].at<cv::Vec2i>(2 * j + 1, 2 * i)[1] = pyramidShifts[l].at<cv::Vec2i>(j, i)[1] * 2;
+                    }
+                }
+            }
+            for (int i = 0; i < pyramid[l + 1].cols - 1; ++i) {
+                for (int j = 0; j < pyramid[l + 1].rows - 1; ++j) {
+                    pyramid[l + 1].at<cv::Vec3b>(j, i) = pyramid[l + 1].at<cv::Vec3b>(j + pyramidShifts[l + 1].at<cv::Vec2i>(j, i)[0],i + pyramidShifts[l + 1].at<cv::Vec2i>(j, i)[1]);
                 }
             }
         }
-        cv::imwrite(resultsDir + "3mask.png", image);
     }
+    cv::imwrite(resultsDir + "3mask.png", pyramid[pyramid.size() - 1]);
 }
 
 
@@ -173,14 +196,14 @@ int estimateQuality(cv::Mat image, int j, int i, int ny, int nx) {
     int sd2 = 0;
     for (int k = -2; k < 3; ++k) {
         for (int l = -2; l < 3; ++l) {
-            if (i + l < 0 && i + l >= image.cols && j + k < 0 && j + k >= image.rows) return 10000000;
-            if (nx + l >= 0 && nx + l < image.cols && ny + k >= 0 && ny + k < image.rows) {
-                rassert(nx + l >= 0 && nx + l < image.cols && ny + k >= 0 && ny + k < image.rows, 12);
+            if (i + l < 0 && i + l >= image.rows && j + k < 0 && j + k >= image.cols) return 10000000;
+            if (nx + l >= 0 && nx + l < image.rows && ny + k >= 0 && ny + k < image.cols) {
+                rassert(nx + l >= 0 && nx + l < image.rows && ny + k >= 0 && ny + k < image.cols, 12);
                 sd0 += abs(image.at<cv::Vec3b>(j + k, i + l)[0] - image.at<cv::Vec3b>(ny + k, nx + l)[0]);
                 sd1 += abs(image.at<cv::Vec3b>(j + k, i + l)[1] - image.at<cv::Vec3b>(ny + k, nx + l)[1]);
                 sd2 += abs(image.at<cv::Vec3b>(j + k, i + l)[2] - image.at<cv::Vec3b>(ny + k, nx + l)[2]);
             } else {
-                return 987896587;
+                return 100000000;
             }
         }
     }
@@ -190,12 +213,12 @@ int estimateQuality(cv::Mat image, int j, int i, int ny, int nx) {
 
 int main() {
     try {
-//        run(1, "mic");
+        run(1, "mic");
         // TODO протестируйте остальные случаи:
 //        run(2, "flowers");
-        run(3, "baloons");
-        run(4, "brickwall");
-        run(5, "old_photo");
+//        run(3, "baloons");
+//        run(4, "brickwall");
+//        run(5, "old_photo");
 //        run(6, "your_data"); // TODO придумайте свой случай для тестирования (рекомендуется не очень большое разрешение, например 300х300)
 
         return 0;
